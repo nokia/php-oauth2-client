@@ -28,7 +28,6 @@ use DateTime;
 use fkooman\OAuth\Client\Exception\OAuthException;
 use fkooman\OAuth\Client\Exception\OAuthServerException;
 use fkooman\OAuth\Client\Http\HttpClientInterface;
-use fkooman\OAuth\Client\Http\CurlHttpClient;
 use fkooman\OAuth\Client\Http\Request;
 use fkooman\OAuth\Client\Http\Response;
 use ParagonIE\ConstantTime\Base64;
@@ -53,7 +52,6 @@ class OAuthClient
 
     /** @var Provider */
     private $provider = null;
-    // public $provider = null;
 
     /** @var string */
     private $userId = null;
@@ -161,7 +159,7 @@ class OAuthClient
             throw new OAuthException('userId not set');
         }
 
-        $accessToken = $this->getAccessToken($tokenid);
+        $accessToken = $this->getAccessToken($requestScope);
         if (!$accessToken) {
             return false;
         }
@@ -462,7 +460,7 @@ class OAuthClient
             if ($this->provider->getProviderId() !== $accessToken->getProviderId()) {
                 continue;
             }
-            if ($scope !== $accessToken->getTokenId()) {
+            if ($scope !== $accessToken->getScope()) {
                 continue;
             }
 
@@ -685,7 +683,7 @@ class OAuthClient
         }
         $this->dateTime = new DateTime(); //obsolete the dateTime when client-obj initiaaized  use the current time as the issue time.
         $new_token = AccessToken::fromRefreshResponse($this->provider,$this->dateTime,$response->json(),$accessToken);//construct the full token date
-        $this->tokenStorage->deleteAccessToken4kc($sessionid);
+        $this->tokenStorage->deleteAccessToken($sessionid);
         $this->tokenStorage->storeAccessToken($sessionid,$new_token);
         
         return $new_token;
@@ -874,7 +872,7 @@ class OAuthClient
         $sessionid = md5(microtime().$current_token->getKCSessionState().mt_rand());
         
         # Insert the token data to access_tokens-table....
-        $this->storeAccessToken4kc($sessionid,$current_token);
+        $this->tokenStorage->storeAccessToken($sessionid,$current_token);
         
         # Insert the Sessionid to sessions-table....
         DBexecute('INSERT INTO sessions (sessionid,userid,lastaccess,status)'.

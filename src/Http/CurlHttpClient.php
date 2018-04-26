@@ -50,7 +50,8 @@ class CurlHttpClient implements HttpClientInterface
 
     public function __destruct()
     {
-        curl_close($this->curlChannel);
+        if ($this->curlChannel != false)
+            curl_close($this->curlChannel);
     }
 
     /**
@@ -91,7 +92,8 @@ class CurlHttpClient implements HttpClientInterface
         if (function_exists('curl_reset')) {
             curl_reset($this->curlChannel);
         } else {
-            curl_close($this->curlChannel);
+            if ($this->curlChannel != false)
+                curl_close($this->curlChannel);
             $this->curlInit();
         }
         $this->responseHeaderList = [];
