@@ -1,19 +1,19 @@
 {
     "authors": [
         {
-            "email": "fkooman@tuxed.net",
-            "name": "Fran\u00e7ois Kooman"
+            "email": "zhiyuan.zou@nokia-sbell.com",
+            "name": "Zhiyuan ZOU"
         }
     ],
     "autoload": {
         "psr-4": {
-            "fkooman\\OAuth\\Client\\": "src/",
-            "fkooman\\OAuth\\Client\\Tests\\": "tests/"
+            "nokia\\OAuth\\Client\\": "src/",
+            "nokia\\OAuth\\Client\\Tests\\": "tests/"
         }
     },
-    "description": "Very simple OAuth 2.0 client",
+    "description": "Very simple OAuth 2.0 client to support zbx-keycloak",
     "license": "MIT",
-    "name": "fkooman/oauth2-client",
+    "name": "nokia/oauth2-client",
     "require": {
         "ext-curl": "*",
         "ext-date": "*",
