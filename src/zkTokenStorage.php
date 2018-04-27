@@ -24,11 +24,10 @@
 
 namespace fkooman\OAuth\Client;
 
-class ZKTokenStorage implements TokenStorageInterface
+class zkTokenStorage implements TokenStorageInterface
 {
     public function __construct()
     {
-        parent::__construct();
     }
 
     /**
@@ -46,7 +45,7 @@ class ZKTokenStorage implements TokenStorageInterface
         }else{
             $TokenArray['expires_in'] = null !== $TokenArray['expires_in'] ? (int) $TokenArray['expires_in'] : null;
             $TokenArray['refresh_expires_in'] = null !== $TokenArray['refresh_expires_in'] ? (int) $TokenArray['refresh_expires_in'] : null;
-            $TokenObj = new AccessToken4ZK($TokenArray);
+            $TokenObj = new AccessToken($TokenArray);
         }
         return $TokenObj;
     }
@@ -84,7 +83,7 @@ class ZKTokenStorage implements TokenStorageInterface
      *
      * @return void
      */
-    public function deleteAccessToken($sessionid)
+    public function deleteAccessToken($sessionid, AccessToken $accessToken)
     {
         DBexecute('DELETE FROM access_tokens where zbx_session_id='.zbx_dbstr($sessionid));
     }

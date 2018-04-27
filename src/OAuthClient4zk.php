@@ -629,8 +629,8 @@ class OAuthClient4zk
 
     public function getAccessToken4kc($sessionid)
     {
-        $accessTokenList = $this->tokenStorage->getAccessTokenList($sessionid);                                                                                                               
-        if (false == $accessTokenList) {
+        $accessToken = $this->tokenStorage->getAccessTokenList($sessionid);                                                                                                               
+        if (false == $accessToken) {
             return false;  
         }
         return $accessToken;                                                                                                                                                                 
