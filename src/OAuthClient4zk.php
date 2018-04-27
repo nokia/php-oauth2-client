@@ -675,7 +675,7 @@ class OAuthClient4zk
             }
 
             // delete the access_token, we assume the user revoked it
-            $this->tokenStorage->deleteAccessToken4kc($sessionid);
+            $this->tokenStorage->deleteAccessToken($sessionid,$accessToken);
 
             return false;
         }
