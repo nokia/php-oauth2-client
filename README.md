@@ -11,19 +11,21 @@ OAuth 2.0 client of the League of Extraordinary Packages! It can be found
 
 # Solution 
 Sunny scenario to describe this solution. 
-* 1. Browser 1st-request the zabbix server. 
-* 2. ZABBIX server find there is no cookie with the 1st-request 
-* 3. ZABBIX server redirect browser to keycloak authentication page. 
-* 4. User input username and password on authentication page.
-* 5. KEYCLOAK login OK .
-* 6. KEYCLOAK redirect browser to ZABBIX server with code and state parameters 
-* 7. ZABBIX server exchange raw-token from KEYCLOAK server with code and state parameters. 
-* 8. KEYCLOAK verify the code and state , issue a raw-token to ZABBIX. 
-* 9. ZABBIX prase the access-token in raw-token to get the user information.
-* 10. Based on the user informationi,ZABBIX decide to server the user or deny.
+1. Browser 1st-request the zabbix server. 
+2. ZABBIX server find there is no cookie with the 1st-request 
+3. ZABBIX server redirect browser to keycloak authentication page. 
+4. User input username and password on authentication page.
+5. KEYCLOAK login OK .
+6. KEYCLOAK redirect browser to ZABBIX server with code and state parameters 
+7. ZABBIX server exchange raw-token from KEYCLOAK server with code and state parameters. 
+8. KEYCLOAK verify the code and state , issue a raw-token to ZABBIX. 
+9. ZABBIX prase the access-token in raw-token to get the user information.
+10. Based on the user informationi,ZABBIX decide to server the user or deny.
+
 In general, for this solution, the 
-* Authentication part  is on KEYCLOAK side 
-* Authorization  part  is on ZABBIX   side 
+1. Authentication part  is on KEYCLOAK side 
+2. Authorization  part  is on ZABBIX   side 
+
 If you also want this solution, you can use this library, else, skip this. 
 
 # Features
