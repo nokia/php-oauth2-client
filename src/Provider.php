@@ -37,19 +37,24 @@ class Provider
 
     /** @var string */
     private $tokenEndpoint;
+    
+    /** @var string ,Add logout URI*/
+    private $logoutEndpoint;
 
     /**
      * @param string      $clientId
      * @param string|null $clientSecret
      * @param string      $authorizationEndpoint
      * @param string      $tokenEndpoint
+     * @param string      $logoutEndpoint 
      */
-    public function __construct($clientId, $clientSecret, $authorizationEndpoint, $tokenEndpoint)
+    public function __construct($clientId, $clientSecret, $authorizationEndpoint, $tokenEndpoint, $logoutEndpoint)
     {
         $this->clientId = $clientId;
         $this->clientSecret = $clientSecret;
         $this->authorizationEndpoint = $authorizationEndpoint;
         $this->tokenEndpoint = $tokenEndpoint;
+        $this->logoutEndpoint = $logoutEndpoint;
     }
 
     /**
@@ -98,5 +103,15 @@ class Provider
     public function getTokenEndpoint()
     {
         return $this->tokenEndpoint;
+    }
+
+    /**
+     * @return string, Add this function to get logoutEndpoint.
+     *
+     * @see https://tools.ietf.org/html/rfc6749#section-3.2
+     */
+    public function getLogoutEndpoint()
+    {
+        return $this->logoutEndpoint;
     }
 }

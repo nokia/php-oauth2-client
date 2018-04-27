@@ -40,12 +40,21 @@ class AccessToken
     /** @var string */
     private $accessToken;
 
+    /** @var string,sub-content of keycloak*/
+    private $tokenId;
+
     /** @var string */
     private $tokenType;
 
     /** @var int|null */
     private $expiresIn = null;
 
+    /** @var int|null */
+    private $RefreshexpiresIn = null;
+    
+    /** @var int|null,sub-content of keycloak*/
+    private $kcSessionState = null;
+    
     /** @var string|null */
     private $refreshToken = null;
 
@@ -74,11 +83,25 @@ class AccessToken
         if (array_key_exists('expires_in', $tokenData)) {
             $this->setExpiresIn($tokenData['expires_in']);
         }
+
+        if (array_key_exists('refresh_expires_in', $tokenData)) {
+            $this->setRefreshExpiresIn($tokenData['refresh_expires_in']);
+        }
+        
+        if (array_key_exists('session_state', $tokenData)) {
+            $this->setKCsessionState($tokenData['session_state']);
+        }
+
         if (array_key_exists('refresh_token', $tokenData)) {
             $this->setRefreshToken($tokenData['refresh_token']);
         }
         if (array_key_exists('scope', $tokenData)) {
             $this->setScope($tokenData['scope']);
+        }
+        if (array_key_exists('id_token', $tokenData)) {
+            if (!empty($tokenData['id_token'])) {
+                $this->setTokenId($tokenData['id_token']);
+            }
         }
     }
 
@@ -99,6 +122,10 @@ class AccessToken
         // scope was granted!
         if (!array_key_exists('scope', $tokenData)) {
             $tokenData['scope'] = $scope;
+        }else{
+            if (empty($tokenData['scope'])) {
+                $tokenData['scope'] = $scope;
+            }
         }
         // add the current DateTime as well to be able to figure out if the
         // token expired
@@ -129,6 +156,10 @@ class AccessToken
         // existing refresh_token for future refresh_token requests
         if (!array_key_exists('refresh_token', $tokenData)) {
             $tokenData['refresh_token'] = $accessToken->getRefreshToken();
+        }else{
+            if (empty($tokenData['scope'])) {
+                $tokenData['scope'] = $accessToken->getScope();
+            }
         }
         // add the current DateTime as well to be able to figure out if the
         // token expired
@@ -163,6 +194,73 @@ class AccessToken
         return $this->accessToken;
     }
 
+
+    /**
+     * @return string
+     *
+     * @see https://tools.ietf.org/html/rfc6749#section-5.1
+     */
+    public function getTokenId()
+    {
+        return $this->tokenId;
+    }
+
+    /**
+     * @return string, Extract Realm role from token returnd from keycloak. 
+     *
+     * @see https://tools.ietf.org/html/rfc6749#section-5.1
+     */
+    public function getRealmRole()
+    {
+        $tks = explode('.', $this->getToken());
+        if(count($tks) != 3) {
+            echo $this->access_token;
+            echo "not a invalid AccessToken...";
+            exit;
+        }
+        list($headb64, $bodyb64, $cryptob64) = $tks;
+        $payload = $this->urlsafeB64Decode($bodyb64);
+        $payload_json = $this->jsonDecode($payload);
+        return $payload_json->realm_access->roles;        
+    }
+
+    /**
+     * @return stringi, Extract Client role from token returnd from keycloak.
+     *
+     * @see https://tools.ietf.org/html/rfc6749#section-5.1
+     */
+    public function getClientRole($client_name)
+    {
+        $tks = explode('.', $this->getToken());
+        if(count($tks) != 3) {
+            echo $this->access_token;
+            echo "not a invalid AccessToken...";
+            exit;
+        }
+        list($headb64, $bodyb64, $cryptob64) = $tks;
+        $payload = $this->urlsafeB64Decode($bodyb64);
+        $payload_json = $this->jsonDecode($payload);
+        return $payload_json->resource_access->$client_name->roles;        
+    }
+    /**
+     * @return string, Extract username from token returnd from keycloak.
+     *
+     * @see https://tools.ietf.org/html/rfc6749#section-5.1
+     */
+    public function getName()
+    {
+        $tks = explode('.', $this->getToken());
+        if(count($tks) != 3) {
+            echo $this->access_token;
+            echo "not a invalid AccessToken...";
+            exit;
+        }
+        list($headb64, $bodyb64, $cryptob64) = $tks;
+        $payload = $this->urlsafeB64Decode($bodyb64);
+        $payload_json = $this->jsonDecode($payload);
+        return $payload_json->preferred_username;        
+    }
+
     /**
      * @return string
      *
@@ -181,6 +279,26 @@ class AccessToken
     public function getExpiresIn()
     {
         return $this->expiresIn;
+    }
+    
+    /**
+     * @return int|null
+     *
+     * @see https://tools.ietf.org/html/rfc6749#section-5.1
+     */
+    public function getRefreshExpiresIn()
+    {
+        return $this->RefreshexpiresIn;
+    }
+
+    /**
+     * @return int|null
+     *
+     * @see https://tools.ietf.org/html/rfc6749#section-5.1
+     */
+    public function getKCSessionState()
+    {
+        return $this->kcSessionState;
     }
 
     /**
@@ -218,6 +336,20 @@ class AccessToken
         // check to see if issuedAt + expiresIn > provided DateTime
         $expiresAt = clone $this->issuedAt;
         $expiresAt->add(new DateInterval(sprintf('PT%dS', $this->getExpiresIn())));
+
+        return $dateTime >= $expiresAt;
+    }
+
+    public function isRefreshExpired(DateTime $dateTime)
+    {
+        if (null === $this->getRefreshExpiresIn()) {
+            // if no expiry was indicated, assume it is valid
+            return false;
+        }
+
+        // check to see if issuedAt + expiresIn > provided DateTime
+        $expiresAt = clone $this->issuedAt;
+        $expiresAt->add(new DateInterval(sprintf('PT%dS', $this->getRefreshExpiresIn())));
 
         return $dateTime >= $expiresAt;
     }
@@ -301,6 +433,21 @@ class AccessToken
     }
 
     /**
+     * @param string $tokenId
+     *
+     * @return void
+     */
+    private function setTokenId($tokenId)
+    {
+        self::requireString('id_token', $tokenId);
+        // access-token = 1*VSCHAR
+        // VSCHAR       = %x20-7E
+        if (1 !== preg_match('/^[\x20-\x7E]+$/', $tokenId)) {
+            throw new AccessTokenException('invalid "access_token"');
+        }
+        $this->tokenId = $tokenId;
+    }
+    /**
      * @param string $tokenType
      *
      * @return void
@@ -308,7 +455,7 @@ class AccessToken
     private function setTokenType($tokenType)
     {
         self::requireString('token_type', $tokenType);
-        if ('bearer' !== $tokenType && 'Bearer' !== $tokenType) {
+        if ('bearer' !== $tokenType) {
             throw new AccessTokenException('unsupported "token_type"');
         }
         $this->tokenType = $tokenType;
@@ -328,6 +475,32 @@ class AccessToken
             }
         }
         $this->expiresIn = $expiresIn;
+    }
+
+    /**
+     * @param int|null $RefreshexpiresIn
+     *
+     * @return void
+     */
+    private function setRefreshExpiresIn($RefreshexpiresIn)
+    {
+        if (null !== $RefreshexpiresIn) {
+            self::requireInt('Refresh_expires_in', $RefreshexpiresIn);
+            if (0 >= $RefreshexpiresIn) {
+                throw new AccessTokenException('invalid "Refresh_expires_in"');
+            }
+        }
+        $this->RefreshexpiresIn = $RefreshexpiresIn;
+    }
+
+    private function setKCsessionState($kcSessionState){
+        if (null !== $kcSessionState) {
+            self::requireString('keycloak session-state', $kcSessionState);
+            // if (0 >= $RefreshexpiresIn) {
+                // throw new AccessTokenException('invalid "Refresh_expires_in"');
+            // }
+        }
+        $this->kcSessionState = $kcSessionState;
     }
 
     /**
@@ -394,4 +567,33 @@ class AccessToken
             throw new AccessTokenException(sprintf('"%s" must be int', $k));
         }
     }
+
+    private static function urlsafeB64Decode($input)
+    {
+        $remainder = strlen($input) % 4;
+        if ($remainder) {
+            $padlen = 4 - $remainder;
+            $input .= str_repeat('=', $padlen);
+        }
+        return base64_decode(strtr($input, '-_', '+/'));
+    }
+
+    private static function  jsonDecode($input)
+    {
+        if (version_compare(PHP_VERSION, '5.4.0', '>=') && !(defined('JSON_C_VERSION') && PHP_INT_SIZE > 4)) {
+            $obj = json_decode($input, false, 512, JSON_BIGINT_AS_STRING);
+        }else{
+            $max_int_length = strlen((string) PHP_INT_MAX) - 1;
+            $json_without_bigints = preg_replace('/:\s*(-?\d{'.$max_int_length.',})/', ': "$1"', $input);
+            $obj = json_decode($json_without_bigints);
+        }
+        if (function_exists('json_last_error') && $errno = json_last_error()) {
+            echo "Error when decode Json...";
+            exit;
+        }elseif($obj === null && $input !== 'null') {
+            echo "Null result with non-null input'";
+        }
+        return $obj;
+    }
+
 }
