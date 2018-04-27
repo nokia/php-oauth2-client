@@ -33,7 +33,7 @@ use fkooman\OAuth\Client\Http\Response;
 use ParagonIE\ConstantTime\Base64;
 use ParagonIE\ConstantTime\Base64UrlSafe;
 
-class OAuthClient
+class OAuthClient4zk
 {
     /** @var TokenStorageInterface */
     private $tokenStorage;
@@ -211,6 +211,9 @@ class OAuthClient
      */
     public function getAuthorizeUri($scope, $redirectUri)
     {
+        if (PHP_SESSION_ACTIVE !== session_status()) {
+            session_start();
+        }
         if (null === $this->userId) {
             throw new OAuthException('userId not set');
         }
