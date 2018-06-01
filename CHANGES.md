@@ -1,5 +1,8 @@
 # Changes
 
+## 5.0.3-zk (2018-06-01)
+- Do some change to make zabbix support keycloak
+
 ## 5.0.3 (2017-11-16)
 - also support `Bearer` as `token_type` in addition to `bearer` (issue #12)
 
