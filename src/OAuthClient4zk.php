@@ -211,7 +211,7 @@ class OAuthClient4zk
     //-------------------------------------------------
     public function logout($sessionid)
     {
-        $refresh_token = $this->getAccessToken4kc($sessionid)->getRefreshToken();
+        $refresh_token = $this->getAccessToken($sessionid)->getRefreshToken();
         $RequestData = [
             'refresh_token' => $refresh_token,
         ];
@@ -303,7 +303,7 @@ class OAuthClient4zk
     //-------------------------------------------------
     public function hasAccessToken($sessionid)
     {
-        if (false === $accessToken = $this->getAccessToken4kc($sessionid)) {
+        if (false === $accessToken = $this->getAccessToken($sessionid)) {
             return false;
         }
 
